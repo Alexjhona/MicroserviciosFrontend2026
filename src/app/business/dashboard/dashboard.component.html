@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Cher Sports - Próximamente</title>
+
+  <style>
+    *{
+      margin:0;
+      padding:0;
+      box-sizing:border-box;
+      font-family:system-ui, -apple-system, sans-serif;
+    }
+
+    /* ===== FONDO ===== */
+    body{
+      height:100vh;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      background:#ffffff; /* fondo blanco */
+      color:#000; /* textos en negro */
+      overflow:hidden;
+      animation:fadeIn 0.8s ease;
+    }
+
+    /* animacion entrada */
+    @keyframes fadeIn{
+      from{
+        opacity:0;
+        transform:scale(1.05);
+      }
+      to{
+        opacity:1;
+        transform:scale(1);
+      }
+    }
+
+    /* ===== CONTENIDO CENTRAL ===== */
+    .container{
+      text-align:center;
+      backdrop-filter: blur(15px);
+      background: rgba(0,0,0,0.05); /* card sutil */
+      padding: 50px 40px;
+      border-radius: 24px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.1); /* sombra suave */
+    }
+
+    .container h1{
+      font-size:48px;
+      margin-bottom:15px;
+      letter-spacing:2px;
+    }
+
+    .container p{
+      font-size:20px;
+      color:#333; /* texto gris oscuro */
+      margin-top:10px;
+    }
+  </style>
+
+</head>
+<body>
+
+<!-- CONTENIDO -->
+<div class="container">
+  <h1>🚧 Próximamente</h1>
+  <p>Estamos trabajando en ello...</p>
+</div>
+
+</body>
+</html>
