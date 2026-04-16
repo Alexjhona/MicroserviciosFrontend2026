@@ -46,7 +46,6 @@ interface Venta {
   styleUrl: './venta.component.css',
 })
 export class VentaComponent {
-
   ventas: Venta[] = [];
   clientes: Cliente[] = [];
   productos: Producto[] = [];
@@ -75,24 +74,23 @@ export class VentaComponent {
   filtroFecha: string = '';
   mostrarDetalles: { [key: number]: boolean } = {};
 
-  private apiVentas = 'http://localhost:8080/api/ventas';
-  private apiClientes = 'http://localhost:8080/api/clientes';
-  private apiProductos = 'http://localhost:8080/api/productos';
+  private readonly apiVentas = 'http://localhost:8080/api/ventas';
+  private readonly apiClientes = 'http://localhost:8080/api/clientes';
+  private readonly apiProductos = 'http://localhost:8080/api/productos';
 
-  // 🔥 SOLO CAMBIO: orden correcto
-  constructor(private http: HttpClient) {
-    this.cargarProductos(); // primero productos
+  constructor(private readonly http: HttpClient) {
+    this.cargarProductos();
     this.cargarClientes();
   }
 
   // ================= CLIENTES =================
-  cargarClientes() {
+  cargarClientes(): void {
     this.http.get<Cliente[]>(this.apiClientes).subscribe(data => {
       this.clientes = data;
     });
   }
 
-  filtrarClientes() {
+  filtrarClientes(): void {
     const texto = this.busquedaCliente.trim().toLowerCase();
     this.clientesFiltrados = !texto
       ? []
@@ -102,14 +100,14 @@ export class VentaComponent {
       );
   }
 
-  seleccionarCliente(cli: Cliente) {
+  seleccionarCliente(cli: Cliente): void {
     this.clienteSeleccionado = cli;
     this.nuevaVenta.clienteId = cli.id;
     this.busquedaCliente = cli.razonSocialONombre;
     this.clientesFiltrados = [];
   }
 
-  crearCliente() {
+  crearCliente(): void {
     if (!this.nuevoCliente.dniOrRuc || !this.nuevoCliente.razonSocialONombre) {
       alert('Completa DNI/RUC y nombre');
       return;
@@ -121,21 +119,24 @@ export class VentaComponent {
       this.nuevaVenta.clienteId = nuevo.id;
       this.busquedaCliente = nuevo.razonSocialONombre;
       this.mostrarNuevoCliente = false;
-      this.nuevoCliente = { dniOrRuc: '', razonSocialONombre: '', direccion: '', telefono: '' };
+      this.nuevoCliente = {
+        dniOrRuc: '',
+        razonSocialONombre: '',
+        direccion: '',
+        telefono: ''
+      };
     });
   }
 
   // ================= PRODUCTOS =================
-  cargarProductos() {
+  cargarProductos(): void {
     this.http.get<Producto[]>(this.apiProductos).subscribe(data => {
       this.productos = data;
-
-      // 🔥 IMPORTANTE: cargar ventas después
       this.cargarVentas();
     });
   }
 
-  filtrarProductos(i: number) {
+  filtrarProductos(i: number): void {
     const texto = this.nuevaVenta.items[i].busquedaProducto?.trim().toLowerCase() || '';
     this.nuevaVenta.items[i].productosFiltrados = !texto
       ? []
@@ -145,7 +146,7 @@ export class VentaComponent {
       );
   }
 
-  seleccionarProducto(i: number, prod: Producto) {
+  seleccionarProducto(i: number, prod: Producto): void {
     this.nuevaVenta.items[i].productoId = prod.id;
     this.nuevaVenta.items[i].productoNombre = prod.nombre;
     this.nuevaVenta.items[i].precio = prod.precioVenta;
@@ -158,12 +159,14 @@ export class VentaComponent {
     }
   }
 
-  onCantidadChange(i: number) {
+  onCantidadChange(i: number): void {
     const item = this.nuevaVenta.items[i];
-    if (item.cantidad < 1) item.cantidad = 1;
+    if (item.cantidad < 1) {
+      item.cantidad = 1;
+    }
   }
 
-  agregarItem() {
+  agregarItem(): void {
     this.nuevaVenta.items.push({
       productoId: null,
       cantidad: 1,
@@ -174,35 +177,40 @@ export class VentaComponent {
     });
   }
 
-  eliminarItem(i: number) {
+  eliminarItem(i: number): void {
     this.nuevaVenta.items.splice(i, 1);
   }
 
   // ================= VENTAS =================
-  cargarVentas() {
+  cargarVentas(): void {
     this.http.get<Venta[]>(this.apiVentas).subscribe(data => {
-      data.forEach(venta => {
-        venta.items.forEach(item => {
-
-          // 🔥 mejora sin romper tu lógica
-          const prod = this.productos.find(p => p.id === item.productoId);
-
-          if (prod) {
-            item.productoNombre = prod.nombre;
-            item.precio = prod.precioVenta;
-          } else {
-            item.productoNombre = item.productoNombre || 'Producto';
-            item.precio = item.precio || 0;
-          }
-
-        });
-      });
-
+      data.forEach(venta => this.completarItemsDeVenta(venta));
       this.ventas = data;
     });
   }
 
-  toggleDetalles(id: number) {
+  private completarItemsDeVenta(venta: Venta): void {
+    venta.items.forEach(item => this.completarDatosProducto(item));
+  }
+
+  private completarDatosProducto(item: ItemVenta): void {
+    const productoEncontrado = this.buscarProductoPorId(item.productoId);
+
+    if (productoEncontrado) {
+      item.productoNombre = productoEncontrado.nombre;
+      item.precio = productoEncontrado.precioVenta;
+      return;
+    }
+
+    item.productoNombre = item.productoNombre || 'Producto';
+    item.precio = item.precio || 0;
+  }
+
+  private buscarProductoPorId(productoId: number | null): Producto | undefined {
+    return this.productos.find(producto => producto.id === productoId);
+  }
+
+  toggleDetalles(id: number): void {
     this.mostrarDetalles[id] = !this.mostrarDetalles[id];
   }
 
@@ -210,7 +218,7 @@ export class VentaComponent {
     return this.nuevaVenta.items.reduce((acc, item) => acc + (item.precio * item.cantidad), 0);
   }
 
-  registrarVenta() {
+  registrarVenta(): void {
     if (!this.nuevaVenta.clienteId || this.nuevaVenta.items.length === 0) {
       this.mensaje = 'Completa los datos';
       return;
@@ -232,7 +240,7 @@ export class VentaComponent {
   }
 
   // ================= PDF =================
-  generarBoletaDesdeVenta(venta: Venta) {
+  generarBoletaDesdeVenta(venta: Venta): void {
     const doc = new jsPDF();
     const marginX = 10;
     const pageWidth = 210;
@@ -242,18 +250,12 @@ export class VentaComponent {
     const cliente = this.clientes.find(c => c.id === venta.clienteId);
     const fecha = venta.fecha ? new Date(venta.fecha).toLocaleDateString() : '';
 
-    // =========================
-    // 🧾 TÍTULO
-    // =========================
     doc.setFontSize(18);
     doc.setFont('helvetica', 'bold');
     doc.text('NOTA DE VENTA', pageWidth / 2, y, { align: 'center' });
 
     y += 15;
 
-    // =========================
-    // 👤 DATOS DE CABECERA
-    // =========================
     doc.setFontSize(10);
     doc.setFont('helvetica', 'bold');
 
@@ -279,9 +281,6 @@ export class VentaComponent {
 
     y += 15;
 
-    // =========================
-    // 📦 TABLA CON MARCOS DEFINIDOS
-    // =========================
     const cols = [
       { title: 'N°', width: 15 },
       { title: 'Producto', width: 85 },
@@ -290,22 +289,18 @@ export class VentaComponent {
       { title: 'Total', width: 35 }
     ];
 
-    const rowHeight = 9; // Un poco más alto para que el texto respire
+    const rowHeight = 9;
 
-    // CONFIGURACIÓN DE BORDES
-    doc.setDrawColor(0, 0, 0); // Color negro para las líneas
-    doc.setLineWidth(0.1);     // Grosor fino pero visible
+    doc.setDrawColor(0, 0, 0);
+    doc.setLineWidth(0.1);
 
-    // --- ENCABEZADOS ---
     let currentX = marginX;
     doc.setFont('helvetica', 'bold');
 
     cols.forEach(col => {
-      // Fondo azul
       doc.setFillColor(33, 150, 243);
-      doc.rect(currentX, y, col.width, rowHeight, 'FD'); // 'FD' = Fill and Draw (Relleno y Borde)
+      doc.rect(currentX, y, col.width, rowHeight, 'FD');
 
-      // Texto blanco
       doc.setTextColor(255, 255, 255);
       doc.text(col.title, currentX + col.width / 2, y + 6, { align: 'center' });
 
@@ -314,7 +309,6 @@ export class VentaComponent {
 
     y += rowHeight;
 
-    // --- FILAS DE PRODUCTOS ---
     doc.setTextColor(0, 0, 0);
     doc.setFont('helvetica', 'normal');
 
@@ -336,23 +330,20 @@ export class VentaComponent {
       rowData.forEach((text, i) => {
         const w = cols[i].width;
 
-        // Dibujar celda con borde
         doc.rect(rowX, y, w, rowHeight);
 
-        // Alinear texto
         if (i === 1) {
-          doc.text(text, rowX + 2, y + 6); // Producto a la izquierda
+          doc.text(text, rowX + 2, y + 6);
         } else {
-          doc.text(text, rowX + w / 2, y + 6, { align: 'center' }); // Números centrados
+          doc.text(text, rowX + w / 2, y + 6, { align: 'center' });
         }
+
         rowX += w;
       });
+
       y += rowHeight;
     });
 
-    // =========================
-    // 💰 TOTALES
-    // =========================
     y += 10;
     const igv = subtotal * 0.18;
     const totalGeneral = subtotal + igv;
@@ -361,16 +352,13 @@ export class VentaComponent {
 
     doc.setFont('helvetica', 'bold');
 
-
-    // TOTAL (Recuadro azul con borde)
     doc.setFillColor(33, 150, 243);
-    doc.rect(boxX - 2, y, boxWidth + 2, 10, 'FD'); // Fondo y borde
+    doc.rect(boxX - 2, y, boxWidth + 2, 10, 'FD');
 
     doc.setTextColor(255, 255, 255);
     doc.text('TOTAL:', boxX + 2, y + 7);
     doc.text(`S/ ${subtotal.toFixed(2)}`, pageWidth - marginX - 2, y + 7, { align: 'right' });
 
-    // Pie de página
     doc.setTextColor(0, 0, 0);
     y += 20;
     doc.text('Gracias por su compra', pageWidth / 2, y, { align: 'center' });
